@@ -345,6 +345,7 @@ type clientSessionState struct {
 // goroutines. Up to TLS 1.2, only ticket-based resumption is supported, not
 // SessionID-based resumption. In TLS 1.3 they were merged into PSK modes, which
 // are supported via this interface.
+//
 //go:generate sh -c "mockgen -package qtls -destination mock_client_session_cache_test.go github.com/marten-seemann/qtls-go1-17 ClientSessionCache"
 type ClientSessionCache = tls.ClientSessionCache
 
@@ -791,6 +792,16 @@ type ExtraConfig struct {
 	// Is called when the client uses a session ticket.
 	// Restores the application data that was saved earlier on GetAppDataForSessionTicket.
 	SetAppDataFromSessionState func([]byte)
+
+	// Is called when a record of type application data is received and decrypted.
+	// rawLength argument is the size of the raw encrypted record in bytes.
+	// dataLength argument is the size of the decrypted record payload data in bytes.
+	OnReceiveApplicationDataRecord func(rawLength int, dataLength int)
+
+	// Is called when a record of type application data is encrypted and sent.
+	// rawLength argument is the size of the raw encrypted record in bytes.
+	// dataLength argument is the size of the decrypted record payload data in bytes.
+	OnSendApplicationDataRecord func(rawLength int, dataLength int)
 }
 
 // Clone clones.

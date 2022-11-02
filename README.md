@@ -1,6 +1,10 @@
-# qtls
+# Fork of QTLS-GO1-19
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/marten-seemann/qtls-go1-17.svg)](https://pkg.go.dev/github.com/marten-seemann/qtls-go1-17)
-[![.github/workflows/go-test.yml](https://github.com/marten-seemann/qtls-go1-17/actions/workflows/go-test.yml/badge.svg)](https://github.com/marten-seemann/qtls-go1-17/actions/workflows/go-test.yml)
+This repository contains a modified version of [qtls-go1-19](https://github.com/marten-seemann/qtls-go1-19).
 
-This repository contains a modified version of the standard library's TLS implementation, modified for the QUIC protocol. It is used by [quic-go](https://github.com/lucas-clemente/quic-go).
+## Security
+This implementation is intended for research purposes only and should not be deployed on the internet.
+
+## Changes to the original QTLS-GO1-19
+- FromTrafficSecret creates a new TLS connection without doing a handshake
+- Sent and received records can be observed

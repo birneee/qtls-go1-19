@@ -780,6 +780,9 @@ func (c *Conn) readRecordOrCCS(expectChangeCipherSpec bool) error {
 		// to avoid copying the plaintext. This is safe because c.rawInput is
 		// not read from or written to until c.input is drained.
 		c.input.Reset(data)
+		if c.extraConfig != nil && c.extraConfig.OnReceiveApplicationDataRecord != nil {
+			c.extraConfig.OnReceiveApplicationDataRecord(len(record), len(data))
+		}
 
 	case recordTypeHandshake:
 		if len(data) == 0 || expectChangeCipherSpec {
@@ -1024,6 +1027,9 @@ func (c *Conn) writeRecordLocked(typ recordType, data []byte) (int, error) {
 		}
 		if _, err := c.write(outBuf); err != nil {
 			return n, err
+		}
+		if c.extraConfig != nil && c.extraConfig.OnSendApplicationDataRecord != nil && typ == recordTypeApplicationData {
+			c.extraConfig.OnSendApplicationDataRecord(len(outBuf), m)
 		}
 		n += m
 		data = data[m:]
@@ -1607,4 +1613,25 @@ func (c *Conn) VerifyHostname(host string) error {
 
 func (c *Conn) handshakeComplete() bool {
 	return atomic.LoadUint32(&c.handshakeStatus) == 1
+}
+
+// FromTrafficSecret creates a new TLS connection without doing a handshake
+// only accepts TLS 1.3 cipher suites
+func FromTrafficSecret(conn net.Conn, cipherSuiteId uint16, rcvTrafficSecret []byte, sendTrafficSecret []byte, config *Config, extraConfig *ExtraConfig, isClient bool) *Conn {
+	c := &Conn{
+		conn:        conn,
+		config:      fromConfig(config),
+		extraConfig: extraConfig,
+		isClient:    isClient,
+	}
+	atomic.StoreUint32(&c.handshakeStatus, 1)
+	c.haveVers = true
+	c.vers = VersionTLS13
+	c.cipherSuite = cipherSuiteId
+	suite := cipherSuiteTLS13ByID(cipherSuiteId)
+	c.in.setTrafficSecret(suite, rcvTrafficSecret)
+	c.in.version = VersionTLS13
+	c.out.setTrafficSecret(suite, sendTrafficSecret)
+	c.out.version = VersionTLS13
+	return c
 }
