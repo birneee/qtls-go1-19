@@ -1672,5 +1672,6 @@ func FromTrafficSecret(conn net.Conn, cipherSuiteId uint16, rcvTrafficSecret []b
 	c.in.version = VersionTLS13
 	c.out.setTrafficSecret(suite, sendTrafficSecret)
 	c.out.version = VersionTLS13
+	c.updateConnectionState()
 	return c
 }
